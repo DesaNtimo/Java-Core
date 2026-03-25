@@ -13,7 +13,7 @@ import java.util.Queue;
 /// 1. **Выбрасывают исключения:** `add(e)`, `remove()`, `element()`.
 /// 2. **Возвращают false/null:** `offer(e)`, `poll()`, `peek()`. Рекомендуется использовать именно их.
 @SuppressWarnings("ALL")
-public class QueueDequeImplementationsLecture {
+public class QueueDequeImplementationsLecture7 {
 
     public static void main(String[] args) {
         demonstratePriorityQueue();

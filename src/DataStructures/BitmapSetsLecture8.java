@@ -6,7 +6,7 @@ import java.util.EnumSet;
 /// # Bitmap-based structures: Битовые векторы и множества перечислений
 /// Структуры, использующие побитовые операции над `long` для достижения максимальной производительности.
 @SuppressWarnings("ALL")
-public class BitmapSetsLecture {
+public class BitmapSetsLecture8 {
 
     enum Status { NEW, IN_PROGRESS, COMPLETED, FAILED }
 

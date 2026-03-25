@@ -16,7 +16,7 @@ import java.util.List;
 /// - **Producer (`? extends T`)**: Если коллекция только поставляет данные — она ковариантна. Из нее можно читать, но нельзя писать.
 /// - **Consumer (`? super T`)**: Если коллекция только принимает данные — она контрвариантна. В нее можно писать, но чтение возвращает только `Object`.
 @SuppressWarnings("ALL")
-public class GenericsLecture {
+public class GenericsLecture2 {
 
     public static void main(String[] args) {
         demonstrateRawTypes();

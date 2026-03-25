@@ -7,7 +7,7 @@ import java.util.List;
 /// # Реализации List: Динамические массивы и Связные списки
 /// `List` — упорядоченная коллекция, допускающая дубликаты и обеспечивающая доступ по индексу.
 @SuppressWarnings("ALL")
-public class ListImplementationsLecture {
+public class ListImplementationsLecture4 {
 
     public static void main(String[] args) {
         demonstrateArrayList();

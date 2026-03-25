@@ -8,7 +8,7 @@ import java.util.TreeSet;
 /// # Реализации Set: Множества
 /// `Set` гарантирует уникальность элементов. Все стандартные реализации под капотом используют соответствующие `Map`.
 @SuppressWarnings("ALL")
-public class SetImplementationsLecture {
+public class SetImplementationsLecture5 {
 
     public static void main(String[] args) {
         demonstrateHashSet();

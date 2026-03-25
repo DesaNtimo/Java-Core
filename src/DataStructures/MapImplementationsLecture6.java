@@ -8,7 +8,7 @@ import java.util.TreeMap;
 /// # Реализации Map: Словари (Ассоциативные массивы)
 /// Хранят пары "ключ-значение". Ключи уникальны. Не наследуют интерфейс `Collection`.
 @SuppressWarnings("ALL")
-public class MapImplementationsLecture {
+public class MapImplementationsLecture6 {
 
     public static void main(String[] args) {
         demonstrateHashMap();

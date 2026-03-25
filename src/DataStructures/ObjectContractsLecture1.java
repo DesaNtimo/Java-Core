@@ -20,7 +20,7 @@ import java.util.Set;
 /// 2. **Связь с equals (Главное правило)**: Если `x.equals(y) == true`, то их `hashCode` **обязаны** совпадать.
 /// 3. **Коллизии**: Если `x.equals(y) == false`, их `hashCode` **могут** совпадать. Однако хорошая хэш-функция стремится минимизировать коллизии для сохранения производительности хэш-таблиц (O(1)).
 @SuppressWarnings("ALL")
-public class ObjectContractsLecture {
+public class ObjectContractsLecture1 {
 
     public static void main(String[] args) {
         demonstrateValidContract();
