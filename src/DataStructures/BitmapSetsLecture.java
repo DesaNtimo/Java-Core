@@ -43,7 +43,7 @@ public class BitmapSetsLecture {
         bitSet.set(20);
 
         boolean bit10 = bitSet.get(10); // true (O(1))
-        bitSet.clear(20);               // сбрасывает бит в false (O(1))
+        bitSet.clear(20); // сбрасывает бит в false (O(1))
 
         BitSet other = new BitSet();
         other.set(10);

@@ -1,6 +1,7 @@
 package DataStructures;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /// # Generics (Дженерики): Полное руководство
@@ -18,13 +19,29 @@ import java.util.List;
 public class GenericsLecture {
 
     public static void main(String[] args) {
+        demonstrateRawTypes();
         demonstrateInvarianceVsCovariance();
         demonstratePECS();
-        demonstrateGenericMethodsAndBounds();
+        demonstrateCustomGenericClass();
+        demonstrateMultipleBounds();
+        demonstrateHeapPollutionAndSafeVarargs(new ArrayList<String>(), new ArrayList<String>());
         demonstrateRestrictions();
     }
 
-    /// ## 1. Инвариантность vs Ковариантность
+    /// ## 1. Сырые типы (Raw Types)
+    /// Использование дженериков без указания типа (`List` вместо `List<String>`).
+    /// Оставлены в Java исключительно для обратной совместимости с кодом до Java 5.
+    /// **Использовать категорически запрещено**, так как они отключают проверку типов компилятором.
+    public static void demonstrateRawTypes() {
+        List rawList = new ArrayList<String>(); // Потеряли типизацию
+        rawList.add(8); // Компилятор промолчит
+        rawList.add("String");
+
+        // При попытке чтения мы получим ClassCastException в рантайме,
+        // так как ожидаем String, а там оказался Integer.
+    }
+
+    /// ## 2. Инвариантность vs Ковариантность
     /// Дженерики **инвариантны**: `List<String>` никак не связан с `List<Object>`. Это защищает от ошибок типизации.
     /// Массивы **ковариантны**: `String[]` является подтипом `Object[]`, что оставляет дыру для `ArrayStoreException` в рантайме.
     public static void demonstrateInvarianceVsCovariance() {
@@ -34,7 +51,7 @@ public class GenericsLecture {
         try {
             objectArray[0] = 42; // Успешно компилируется, но падает в рантайме
         } catch (ArrayStoreException e) {
-            System.out.println("Ошибка массивов: " + e.getMessage());
+            System.out.println("Ошибка массивов предотвращена: " + e.getMessage());
         }
 
         // Инвариантность дженериков (Безопасно)
@@ -42,55 +59,76 @@ public class GenericsLecture {
         // List<Object> objectList = stringList; // ОШИБКА КОМПИЛЯЦИИ: несовместимые типы
     }
 
-    /// ## 2. Маски (Wildcards) и правило PECS
-    /// Использование масок позволяет обойти инвариантность дженериков там, где это необходимо.
+    /// ## 3. Маски (Wildcards) и правило PECS
+    /// Классический пример из JDK — метод `Collections.copy(dest, src)`.
+    /// `dest` принимает данные (Consumer -> `super`), `src` отдает (Producer -> `extends`).
     public static void demonstratePECS() {
         List<Integer> integers = new ArrayList<>(List.of(1, 2, 3));
         List<Number> numbers = new ArrayList<>();
 
         // ? extends Number (Ковариантность) - Коллекция выступает как Producer
         List<? extends Number> producer = integers;
-        Number num = producer.get(0); // Читать безопасно, мы точно знаем, что там как минимум Number
-        // producer.add(4); // ОШИБКА: компилятор не знает конкретный тип списка (это может быть List<Double>)
+        Number num = producer.get(0); // Читать безопасно
+        // producer.add(4); // ОШИБКА: компилятор не знает конкретный тип списка
 
         // ? super Integer (Контрвариантность) - Коллекция выступает как Consumer
         List<? super Integer> consumer = numbers;
-        consumer.add(42); // Писать безопасно, любой Integer является Number
-        Object obj = consumer.get(0); // Читать можно только как Object, так как точный тип неизвестен
+        consumer.add(42); // Писать безопасно, Integer является Number
+        Object obj = consumer.get(0); // Читать можно только как Object
     }
 
-    /// ## 3. Generic-методы и границы (Bounded Type Parameters)
-    /// Параметры типов можно ограничивать. Конструкция `<T extends Comparable<T>>` означает:
-    /// "Тип T должен реализовывать интерфейс Comparable для самого себя".
-    public static <T extends Comparable<T>> T findMax(List<T> list) {
-        if (list == null || list.isEmpty()) return null;
-        T max = list.get(0);
-        for (T element : list) {
-            if (element.compareTo(max) > 0) {
-                max = element;
-            }
+    /// ## 4. Собственные Generic-классы
+    /// Класс параметризуется типом `T` при создании объекта.
+    static class Container<T> {
+        private T item;
+
+        public void setItem(T item) { this.item = item; }
+        public T getItem() { return item; }
+    }
+
+    public static void demonstrateCustomGenericClass() {
+        Container<String> stringContainer = new Container<>();
+        stringContainer.setItem("Backend");
+        System.out.println("Контейнер содержит: " + stringContainer.getItem());
+    }
+
+    /// ## 5. Множественные ограничения (Multiple Bounds)
+    /// Тип может иметь одну границу-класс и сколько угодно границ-интерфейсов.
+    /// Класс всегда должен идти первым в списке: `<T extends ClassA & InterfaceB & InterfaceC>`.
+    public static <T extends Number & Comparable<T>> void processNumber(T number) {
+        System.out.println("Число " + number + " реализует и Number, и Comparable.");
+    }
+
+    public static void demonstrateMultipleBounds() {
+        processNumber(10); // Успешно, Integer расширяет Number и реализует Comparable
+        // processNumber(new AtomicInteger(10)); // ОШИБКА: AtomicInteger расширяет Number, но не реализует Comparable
+    }
+
+    /// ## 6. Загрязнение кучи (Heap Pollution) и @SafeVarargs
+    /// Смешивание varargs (`...`) и дженериков опасно, так как varargs под капотом — это массив,
+    /// а массивы ковариантны и не сохраняют информацию о дженериках в рантайме.
+    /// Аннотация @SafeVarargs говорит компилятору: "Я обещаю не писать в этот массив элементы другого типа".
+    @SafeVarargs
+    public static <T> void demonstrateHeapPollutionAndSafeVarargs(List<T>... lists) {
+        // Если бы не @SafeVarargs, компилятор выдал бы "Possible heap pollution from parameterized vararg type"
+        for (List<T> list : lists) {
+            System.out.println("Обработка списка размером: " + list.size());
         }
-        return max;
     }
 
-    public static void demonstrateGenericMethodsAndBounds() {
-        List<Integer> numbers = List.of(10, 50, 20);
-        System.out.println("Максимальное число: " + findMax(numbers)); // Выведет 50
-    }
-
-    /// ## 4. Жесткие ограничения дженериков в Java
+    /// ## 7. Жесткие ограничения дженериков в Java
     /// Из-за обратной совместимости и стирания типов в Java есть ряд запретов.
     public static void demonstrateRestrictions() {
-        // 1. Нельзя использовать примитивы (из-за стирания в Object)
-        // List<int> ints = new ArrayList<>(); // ОШИБКА. Нужно использовать List<Integer>
+        // 1. Нельзя использовать примитивы
+        // List<int> ints = new ArrayList<>(); // ОШИБКА. Нужно List<Integer>
 
         // 2. Нельзя создать экземпляр T или массив T
-        // T obj = new T(); // ОШИБКА: компилятор не знает, какой конструктор вызывать
-        // T[] array = new T[10]; // ОШИБКА: массив требует точной информации о типе в рантайме
+        // T obj = new T(); // ОШИБКА
+        // T[] array = new T[10]; // ОШИБКА
 
         // 3. Нельзя использовать instanceof с параметризованными типами
         List<String> strings = new ArrayList<>();
-        // if (strings instanceof List<String>) {} // ОШИБКА: в рантайме это просто List
+        // if (strings instanceof List<String>) {} // ОШИБКА
 
         // Разрешено только с маской без границ:
         if (strings instanceof List<?>) {

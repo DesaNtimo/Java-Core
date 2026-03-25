@@ -1,107 +1,137 @@
 package DataStructures;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /// # Утилитарные классы и Фабрики коллекций
 /// В стандартной библиотеке Java инструментарий для работы с коллекциями и массивами разделен на:
-/// 1. `java.util.Arrays` — утилиты для работы с массивами (сортировка, поиск, преобразование).
-/// 2. Статические фабрики интерфейсов (`List.of`, `Set.of`, `Map.of`) — введены в Java 9 для создания неизменяемых (immutable) коллекций.
-/// 3. `java.util.Collections` — алгоритмы для готовых коллекций.
+/// 1. `java.util.Arrays` — утилиты для работы с массивами (сортировка, поиск, преобразование, потоки).
+/// 2. Статические фабрики интерфейсов (`List.of`, `Set.of`, `Map.of`) — для создания неизменяемых (immutable) коллекций.
+/// 3. `java.util.Collections` — алгоритмы и обертки для готовых коллекций.
 @SuppressWarnings("ALL")
 public class CollectionUtilitiesLecture {
 
     public static void main(String[] args) {
         demonstrateArraysUtility();
+        demonstrateDeepArrayUtils();
         demonstrateImmutableFactories();
         demonstrateAdvancedCollectionsUtils();
+        demonstrateSynchronizedWrappers();
     }
 
     /// ## Класс Arrays: Утилиты для массивов
     /// Предоставляет статические методы для манипуляции массивами.
     ///
     /// **Временная сложность основных методов:**
-    /// - `Arrays.sort()`: **O(N log N)**. Использует Dual-Pivot Quicksort для примитивов и TimSort для объектов.
+    /// - `Arrays.sort()`: **O(N log N)**. Использует Dual-Pivot Quicksort (для примитивов) и TimSort (для объектов).
     /// - `Arrays.binarySearch()`: **O(log N)**. Массив обязан быть предварительно отсортирован.
-    /// - `Arrays.copyOf()` / `Arrays.copyOfRange()`: **O(N)**. Выделяет новую память и копирует элементы (под капотом `System.arraycopy`).
-    /// - `Arrays.asList()`: **O(1)**. Создает обертку (View) над массивом. Размер фиксирован (нельзя `add`/`remove`), но элементы можно изменять (`set`).
-    /// - `Arrays.equals()` / `Arrays.mismatch()`: **O(N)**.
+    /// - `Arrays.copyOf()`: **O(N)**. Выделяет новую память и копирует элементы.
+    /// - `Arrays.asList()`: **O(1)**. Создает View фиксированного размера над массивом.
+    /// - `Arrays.fill()`: **O(N)**. Заполняет массив одинаковым значением.
+    /// - `Arrays.stream()`: **O(1)** на создание потока. Главный мост к Stream API.
     public static void demonstrateArraysUtility() {
         int[] numbers = {5, 2, 9, 1, 5, 6};
 
-        // 1. Сортировка и поиск
-        Arrays.sort(numbers); // O(N log N)
-        int index = Arrays.binarySearch(numbers, 5); // O(log N) -> вернет индекс элемента 5
+        // Сортировка и поиск
+        Arrays.sort(numbers);
+        int index = Arrays.binarySearch(numbers, 5); // O(log N)
 
-        // 2. Копирование
-        int[] copied = Arrays.copyOf(numbers, 10); // O(N). Увеличивает размер массива, новые ячейки заполнятся 0.
+        // Копирование и заполнение
+        int[] copied = Arrays.copyOf(numbers, 10); // O(N), новые ячейки будут 0
+        Arrays.fill(copied, 7, 10, -1); // O(N), заполнит индексы с 7 по 9 числом -1
 
-        // 3. Сравнение (Java 9+)
-        int[] arr1 = {1, 2, 3};
-        int[] arr2 = {1, 2, 4};
-        int mismatchIndex = Arrays.mismatch(arr1, arr2); // Вернет 2 (индекс первого несовпадения)
+        // Сравнение (Java 9+)
+        int mismatchIndex = Arrays.mismatch(new int[]{1, 2}, new int[]{1, 3}); // Вернет 1
 
-        // 4. Мост между массивами и коллекциями
-        String[] strings = {"Java", "Spring", "SQL"};
-        List<String> fixedList = Arrays.asList(strings); // O(1)
-        fixedList.set(0, "Java 21"); // Допустимо, изменит и массив!
-        // fixedList.add("Docker");  // Выбросит UnsupportedOperationException
+        // Мост к Stream API (очень важно для бэкенда)
+        IntStream stream = Arrays.stream(numbers); // O(1) на создание
+
+        // Мост к коллекциям
+        List<String> fixedList = Arrays.asList("A", "B"); // O(1)
+        fixedList.set(0, "Z"); // Допустимо, изменит исходный массив под капотом
+    }
+
+    /// ## Работа с многомерными массивами
+    /// Обычные `equals()` и `toString()` у массивов не работают глубоко (проверяют/выводят только верхний уровень ссылок).
+    /// Для вложенных массивов (матриц) обязательно использовать методы с приставкой `deep`.
+    public static void demonstrateDeepArrayUtils() {
+        String[][] matrix1 = {{"A", "B"}, {"C", "D"}};
+        String[][] matrix2 = {{"A", "B"}, {"C", "D"}};
+
+        boolean isEq = Arrays.equals(matrix1, matrix2); // false! Сравнивает ссылки вложенных массивов
+        boolean isDeepEq = Arrays.deepEquals(matrix1, matrix2); // true! Рекурсивно сравнивает содержимое (O(N))
+
+        String str = Arrays.deepToString(matrix1); // [[A, B], [C, D]] (O(N))
+        System.out.println("Глубокий вывод массива: " + str);
     }
 
     /// ## Статические фабрики (Java 9+ и Java 10+)
-    /// Идеальный инструмент для создания констант и возврата безопасных данных.
+    /// Идеальный инструмент для создания констант.
     /// Контракт: **Абсолютная неизменяемость** и **запрет на null** (выбросит `NullPointerException`).
     ///
     /// **Временная сложность:**
     /// - `of()`: **O(N)** на создание, **O(1)** на доступ.
-    /// - `copyOf()`: **O(N)**, если передана изменяемая коллекция. **O(1)**, если передана уже immutable-коллекция (просто вернет ссылку).
+    /// - `copyOf()`: **O(N)** для изменяемых, **O(1)** если передана уже immutable-коллекция.
     public static void demonstrateImmutableFactories() {
-        // 1. Создание Immutable List и Set
         List<String> immutableList = List.of("A", "B", "C");
-        Set<Integer> immutableSet = Set.of(1, 2, 3); // Если передать дубликаты (Set.of(1, 1)) — выбросит IllegalArgumentException
+        Set<Integer> immutableSet = Set.of(1, 2, 3); // Дубликаты вызовут IllegalArgumentException
 
-        // 2. Создание Immutable Map
-        Map<String, Integer> mapUpTo10 = Map.of(
-                "One", 1,
-                "Two", 2
-        ); // Работает до 10 пар "ключ-значение"
+        // Попытка передать null вызовет NullPointerException
+        // List.of("A", null);
 
-        // Для большего количества пар используется Map.ofEntries
-        Map<String, Integer> largeMap = Map.ofEntries(
-                Map.entry("A", 1),
-                Map.entry("B", 2)
-                // ... неограниченное количество
+        Map<String, Integer> map = Map.of("One", 1, "Two", 2); // До 10 пар
+        Map<String, Integer> largeMap = Map.ofEntries( // Для > 10 пар
+                Map.entry("A", 1), Map.entry("B", 2)
         );
 
-        // 3. copyOf (Java 10+) - Безопасное копирование данных извне
-        List<String> mutableSource = new java.util.ArrayList<>(Arrays.asList("X", "Y"));
+        // Безопасное копирование данных извне (Java 10+)
+        List<String> mutableSource = new ArrayList<>(Arrays.asList("X", "Y"));
         List<String> safeSnapshot = List.copyOf(mutableSource);
-
-        mutableSource.add("Z"); // Изменение оригинала НЕ отразится на safeSnapshot
+        mutableSource.add("Z"); // НЕ отразится на safeSnapshot
     }
 
-    /// ## Дополнительные алгоритмы Collections
-    /// Помимо сортировки и бинарного поиска, класс содержит утилиты для проверки состояния и генерации данных.
+    /// ## Дополнительные и мутирующие алгоритмы Collections
     ///
     /// **Временная сложность:**
-    /// - `Collections.frequency()`: **O(N)**. Подсчет вхождений.
-    /// - `Collections.disjoint()`: **O(N)** или **O(N log N)**. Проверяет, нет ли общих элементов. Быстрее всего работает, если одна из коллекций — `Set`.
-    /// - `Collections.nCopies()`: **O(1)**. Создает виртуальный список из N одинаковых элементов (экономит память).
+    /// - `Collections.frequency()`, `replaceAll()`, `disjoint()`: **O(N)**.
+    /// - `Collections.swap()`: **O(1)** для `ArrayList`, **O(N)** для `LinkedList`.
+    /// - `Collections.nCopies()`: **O(1)**.
     public static void demonstrateAdvancedCollectionsUtils() {
         List<String> items = Arrays.asList("Apple", "Banana", "Apple", "Orange");
 
-        // 1. Частота элемента
-        int appleCount = Collections.frequency(items, "Apple"); // O(N) -> вернет 2
+        // Подсчет вхождений
+        int count = Collections.frequency(items, "Apple"); // 2
 
-        // 2. Проверка пересечений
-        List<String> otherItems = Arrays.asList("Kiwi", "Mango");
-        boolean isDisjoint = Collections.disjoint(items, otherItems); // O(N) -> вернет true (нет общих элементов)
+        // Проверка пересечений
+        boolean isDisjoint = Collections.disjoint(items, List.of("Kiwi")); // true (нет общих)
 
-        // 3. Генерация заглушек
-        // Виртуальный список из 1000 строк "Default". В памяти хранится только одна строка и размер.
+        // Мутирующие операции
+        Collections.replaceAll(items, "Apple", "Mango"); // Заменит все "Apple" на "Mango"
+        Collections.swap(items, 0, 1); // Поменяет местами 0 и 1 элементы
+
+        // Генерация заглушек (в памяти хранится только 1 объект)
         List<String> defaultValues = Collections.nCopies(1000, "Default");
+    }
+
+    /// ## Потокобезопасные обертки (Legacy)
+    /// `Collections` позволяет сделать обычную коллекцию потокобезопасной.
+    /// Все методы оборачиваются в блок `synchronized` по мьютексу самой коллекции.
+    /// **Важно:** При итерации по такой коллекции требуется ручная синхронизация!
+    /// (В современном коде предпочтительнее классы из `java.util.concurrent`, например `ConcurrentHashMap`).
+    public static void demonstrateSynchronizedWrappers() {
+        List<String> syncList = Collections.synchronizedList(new ArrayList<>());
+        syncList.add("Thread-safe add"); // Синхронизировано внутри
+
+        // При обходе через итератор (в т.ч. for-each) синхронизация обязательна
+        synchronized (syncList) {
+            for (String s : syncList) {
+                System.out.println(s);
+            }
+        }
     }
 }
