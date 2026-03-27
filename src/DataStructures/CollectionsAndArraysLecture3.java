@@ -1,8 +1,6 @@
 package DataStructures;
 
 import java.util.*;
-import java.util.stream.IntStream;
-
 /// # Java Collections Framework и утилитарные классы: Полный гид
 /// В этом классе объединены возможности `java.util.Collections` и `java.util.Arrays`.
 ///

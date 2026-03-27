@@ -1,9 +1,7 @@
 package DataStructures;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
 /// # Generics (Дженерики): Полное руководство
 /// Дженерики обеспечивают строгую проверку типов на этапе компиляции, устраняя необходимость ручного кастования (`ClassCastException` предотвращается до запуска программы).
 ///
