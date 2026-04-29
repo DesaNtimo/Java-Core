@@ -31,6 +31,7 @@
 * `NioCoreLecture8` & `Nio2FilesPathsLecture5`: Неблокирующий I/O, каналы (Channels), буферы (Buffers), селекторы, работа с путями через `Path` и `Files`.
 * `WatchServiceLecture6`: Отслеживание изменений (создание, удаление, модификация) в файловой системе.
 * `ParsingPerformanceLecture4`: Анализ производительности различных подходов к парсингу файлов.
+* `DeveloperNotesIOLecture9`: Иллюстрация полезных фичей `FastScanner` и `Files API`.
 
 ### 4. ⚙️ Multithreading (Многопоточность)
 Основы и продвинутые концепции конкурентного программирования:
